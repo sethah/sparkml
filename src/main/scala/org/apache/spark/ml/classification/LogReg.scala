@@ -356,7 +356,7 @@ class LogReg @Since("1.2.0") (
         new MultivariateOnlineSummarizer, new MultiClassSummarizer
       )(seqOp, combOp, $(aggregationDepth))
     }
-//    instances.unpersist()
+    //    instances.unpersist()
 
     val histogram = labelSummarizer.histogram
     val numInvalid = labelSummarizer.countInvalid
@@ -372,7 +372,7 @@ class LogReg @Since("1.2.0") (
     }
 
     org.nd4j.linalg.api.buffer.util.DataTypeUtil.setDTypeForContext(org.nd4j.linalg.api.buffer.DataBuffer.Type.DOUBLE)
-    val blockSize = 2048
+    val blockSize = 4096
     val data = instances.mapPartitions { it =>
       it.grouped(blockSize).map { block =>
         val numFeatures = block.head.features.size
@@ -386,7 +386,7 @@ class LogReg @Since("1.2.0") (
         (labels, weights, Nd4j.create(examples).reshape(block.length, numFeatures).transpose)
       }
     }
-//    data.persist(StorageLevel.MEMORY_AND_DISK_SER)
+    //    data.persist(StorageLevel.MEMORY_AND_DISK_SER)
 
     val isMultinomial = $(family) match {
       case "binomial" =>
@@ -1220,8 +1220,7 @@ private class LogCostFun(
 
     var regVal = 0.0
     if (standardization) {
-      val flatten = coefs.reshape(coefs.length(), 1)
-      regVal = flatten.mmul(flatten.transpose).getDouble(0)
+      regVal = coefs.mul(coefs).sumNumber().doubleValue()
       coefGrad.addi(coefs.mul(regParamL2))
     } else {
       val fstdSquared = featuresStd.muli(featuresStd)
@@ -1234,7 +1233,6 @@ private class LogCostFun(
     val totalCoefArray = new Array[Double](numFeaturesPlusIntercept * numClasses)
     val coefArr = coefGrad.data().asDouble()
     val coefArrColMajor = new DenseMatrix(numClasses, numFeatures, coefArr, isTransposed = true).toArray
-    //    println("logreg", coefArrColMajor.mkString(","))
 
     val interceptArr = intGrad.data().asDouble()
     System.arraycopy(coefArrColMajor, 0, totalCoefArray, 0, coefArrColMajor.length)
@@ -1280,7 +1278,7 @@ private class LogCostFun(
     //      0.5 * regParamL2 * sum
     //    }
     bcCoeffs.destroy(blocking = false)
-//    val regVal = 0.0
+    //    val regVal = 0.0
 
     (logisticAggregator.loss + regVal, new BDV(totalCoefArray))
   }

@@ -54,7 +54,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     val params = Params.parseArgs(args)
-    val sparkConf = new SparkConf().setAppName("test logistic regression").setMaster("local[*]")
+    val sparkConf = new SparkConf().setAppName("test logistic regression")
     val sc = new SparkContext(sparkConf)
     org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.ERROR)
     try {
